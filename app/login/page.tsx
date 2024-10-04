@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +21,7 @@ import { passwordSchema } from "@/validation/passwordSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { loginWithCredentials } from "./actions";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -35,7 +38,10 @@ const Login = () => {
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    console.log(data);
+    await loginWithCredentials({
+      email: data.email,
+      password: data.password,
+    });
   };
 
   return (
