@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -16,14 +17,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { passwordMatchSchema } from '@/validation/passwordMatchSchema';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { registerUser } from './actions';
-import Link from 'next/link';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { passwordMatchSchema } from "@/validation/passwordMatchSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { registerUser } from "./actions";
+import Link from "next/link";
 
 export const formSchema = z
   .object({
@@ -37,9 +38,9 @@ const Register = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
-      passwordConfirm: '',
+      email: "",
+      password: "",
+      passwordConfirm: "",
     },
   });
 
@@ -50,7 +51,7 @@ const Register = () => {
       passwordConfirm: data.passwordConfirm,
     });
     if (response?.error) {
-      form.setError('email', {
+      form.setError("email", {
         message: response?.message,
       });
     }
@@ -126,6 +127,14 @@ const Register = () => {
               </form>
             </Form>
           </CardContent>
+          <CardFooter className="flex-col gap-2">
+            <div className="text-muted-foreground text-sm">
+              Already have an account?{" "}
+              <Link href="/login" className="underline">
+                Login
+              </Link>
+            </div>
+          </CardFooter>
         </Card>
       )}
     </main>
