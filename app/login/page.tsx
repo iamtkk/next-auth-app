@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -15,13 +15,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { passwordSchema } from "@/validation/passwordSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { loginWithCredentials } from "./actions";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { passwordSchema } from '@/validation/passwordSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { loginWithCredentials } from './actions';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -29,19 +30,28 @@ const formSchema = z.object({
 });
 
 const Login = () => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    await loginWithCredentials({
+    const response = await loginWithCredentials({
       email: data.email,
       password: data.password,
     });
+
+    if (response?.error) {
+      form.setError('root', {
+        message: response?.message,
+      });
+    } else {
+      router.push('/my-account');
+    }
   };
 
   return (

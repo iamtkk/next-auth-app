@@ -1,8 +1,8 @@
-"use server";
+'use server';
 
-import { signIn } from "@/auth";
-import { passwordSchema } from "@/validation/passwordSchema";
-import { z } from "zod";
+import { signIn } from '@/auth';
+import { passwordSchema } from '@/validation/passwordSchema';
+import { z } from 'zod';
 
 export const loginWithCredentials = async ({
   email,
@@ -21,17 +21,20 @@ export const loginWithCredentials = async ({
   if (!loginValidation.success) {
     return {
       error: true,
-      message: loginValidation.error.issues[0]?.message ?? "An error occurred",
+      message: loginValidation.error.issues[0]?.message ?? 'An error occurred',
     };
   }
 
   try {
-    await signIn("credentials", {
+    await signIn('credentials', {
       email,
       password,
       redirect: false,
     });
   } catch (e) {
-    console.log(e);
+    return {
+      error: true,
+      message: 'Incorrect email or password',
+    };
   }
 };
