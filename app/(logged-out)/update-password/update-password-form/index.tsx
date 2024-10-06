@@ -11,36 +11,39 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { passwordMatchSchema } from "@/validation/passwordMatchSchema";
-import { passwordSchema } from "@/validation/passwordSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { changePassword } from "./actions";
 import { useToast } from "@/hooks/use-toast";
+import { updatePassword } from "./actions";
+import Link from "next/link";
 
-const formSchema = z
-  .object({
-    currentPassword: passwordSchema,
-  })
-  .and(passwordMatchSchema);
+const formSchema = passwordMatchSchema;
 
-const ChangePasswordForm = () => {
+type Props = {
+  token: string;
+};
+
+const UpdatePasswordForm = ({ token }: Props) => {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      currentPassword: "",
       password: "",
       passwordConfirm: "",
     },
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    const response = await changePassword({
-      currentPassword: data.currentPassword,
+    const response = await updatePassword({
+      token,
       password: data.password,
       passwordConfirm: data.passwordConfirm,
     });
+
+    if (response?.tokenIsValid) {
+      window.location.reload();
+    }
 
     if (response?.error) {
       form.setError("root", {
@@ -56,26 +59,20 @@ const ChangePasswordForm = () => {
     }
   };
 
-  return (
+  return form.formState.isSubmitSuccessful ? (
+    <div>
+      You password has been updated.{" "}
+      <Link className="underline" href="/login">
+        Click here to login to your account
+      </Link>
+    </div>
+  ) : (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <fieldset
           disabled={form.formState.isSubmitting}
           className="flex flex-col gap-2"
         >
-          <FormField
-            control={form.control}
-            name="currentPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Password</FormLabel>
-                <FormControl>
-                  <Input {...field} type="password" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <FormField
             control={form.control}
             name="password"
@@ -105,10 +102,10 @@ const ChangePasswordForm = () => {
           {!!form.formState.errors.root?.message && (
             <FormMessage>{form.formState.errors.root?.message}</FormMessage>
           )}
-          <Button type="submit">Change Password</Button>
+          <Button type="submit">Update Password</Button>
         </fieldset>
       </form>
     </Form>
   );
 };
-export default ChangePasswordForm;
+export default UpdatePasswordForm;
