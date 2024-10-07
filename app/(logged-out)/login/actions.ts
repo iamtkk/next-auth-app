@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-"use server";
+'use server';
 
-import { signIn } from "@/auth";
-import { passwordSchema } from "@/validation/passwordSchema";
-import { z } from "zod";
+import { signIn } from '@/auth';
+import db from '@/db/drizzle';
+import { users } from '@/db/usersSchema';
+import { passwordSchema } from '@/validation/passwordSchema';
+import { compare } from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 
 export const loginWithCredentials = async ({
   email,
@@ -22,12 +26,12 @@ export const loginWithCredentials = async ({
   if (!loginValidation.success) {
     return {
       error: true,
-      message: loginValidation.error.issues[0]?.message ?? "An error occurred",
+      message: loginValidation.error.issues[0]?.message ?? 'An error occurred',
     };
   }
 
   try {
-    await signIn("credentials", {
+    await signIn('credentials', {
       email,
       password,
       redirect: false,
@@ -35,7 +39,36 @@ export const loginWithCredentials = async ({
   } catch (e) {
     return {
       error: true,
-      message: "Incorrect email or password",
+      message: 'Incorrect email or password',
     };
   }
+};
+
+export const preLoginCheck = async ({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) => {
+  const [user] = await db.select().from(users).where(eq(users.email, email));
+
+  if (!user) {
+    return {
+      error: true,
+      message: 'Incorrect credentials',
+    };
+  } else {
+    const passwordCorrect = await compare(password, user.password!);
+    if (!passwordCorrect) {
+      return {
+        error: true,
+        message: 'Incorrect credentials',
+      };
+    }
+  }
+
+  return {
+    twoFactorAuthEnabled: user.twoFactorActivated,
+  };
 };
