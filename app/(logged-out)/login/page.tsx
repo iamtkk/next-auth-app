@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,7 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -16,22 +16,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { passwordSchema } from '@/validation/passwordSchema';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { loginWithCredentials, preLoginCheck } from './actions';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useState } from 'react';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { passwordSchema } from "@/validation/passwordSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { loginWithCredentials, preLoginCheck } from "./actions";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from '@/components/ui/input-otp';
+} from "@/components/ui/input-otp";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -39,14 +40,15 @@ const formSchema = z.object({
 });
 
 const Login = () => {
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState("");
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
@@ -57,13 +59,13 @@ const Login = () => {
     });
 
     if (preLoginCheckResponse.error) {
-      form.setError('root', {
+      form.setError("root", {
         message: preLoginCheckResponse?.message,
       });
       return;
     }
 
-    if (preLoginCheckResponse.twoFactorAuthEnabled) {
+    if (preLoginCheckResponse.twoFactorActivated) {
       setStep(2);
     } else {
       const response = await loginWithCredentials({
@@ -72,19 +74,32 @@ const Login = () => {
       });
 
       if (response?.error) {
-        form.setError('root', {
+        form.setError("root", {
           message: response?.message,
         });
       } else {
-        router.push('/my-account');
+        router.push("/my-account");
       }
     }
   };
 
-  const email = form.getValues('email');
+  const email = form.getValues("email");
 
   const handleOTPSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const response = await loginWithCredentials({
+      email: form.getValues("email"),
+      password: form.getValues("password"),
+      token: otp,
+    });
+    if (response?.error) {
+      toast({
+        title: response.message,
+        variant: "destructive",
+      });
+    } else {
+      router.push("/my-account");
+    }
   };
 
   return (
@@ -140,16 +155,16 @@ const Login = () => {
           </CardContent>
           <CardFooter className="flex-col gap-2">
             <div className="text-muted-foreground text-sm">
-              Don&apos;t have an account?{' '}
+              Don&apos;t have an account?{" "}
               <Link href="/register" className="underline">
                 Register
               </Link>
             </div>
             <div className="text-muted-foreground text-sm">
-              Forgot password?{' '}
+              Forgot password?{" "}
               <Link
                 href={`/password-reset${
-                  email ? `?email=${encodeURIComponent(email)}` : ''
+                  email ? `?email=${encodeURIComponent(email)}` : ""
                 }`}
                 className="underline"
               >
@@ -183,6 +198,9 @@ const Login = () => {
                   <InputOTPSlot index={5} />
                 </InputOTPGroup>
               </InputOTP>
+              <Button disabled={otp.length !== 6} type="submit">
+                Verify OTP
+              </Button>
             </form>
           </CardContent>
         </Card>
